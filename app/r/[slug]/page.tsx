@@ -1,0 +1,2 @@
+import{notFound}from"next/navigation";import{getMenu,getRestaurantBySlug}from"../../../lib/db";import Storefront from"./storefront";
+export default async function RestaurantPage({params}:{params:Promise<{slug:string}>}){const{slug}=await params;const restaurant=await getRestaurantBySlug(slug);if(!restaurant)notFound();return <Storefront restaurant={restaurant} menu={await getMenu(restaurant.id)}/>}

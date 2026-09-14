@@ -1,0 +1,1 @@
+"use client";import{useRouter}from"next/navigation";export default function SignOutButton(){const r=useRouter();return <button className="signOut" onClick={async()=>{await fetch("/api/auth/sign-out",{method:"POST"});r.push("/");r.refresh()}}>Sign out</button>}

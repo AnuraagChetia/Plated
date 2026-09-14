@@ -1,0 +1,2 @@
+import{createServerClient}from"@supabase/ssr";import{NextResponse}from"next/server";
+export function routeClient(request:Request){const response=NextResponse.json({});const client=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,{cookies:{getAll(){return request.headers.get("cookie")?.split(";").map(x=>{const[name,...rest]=x.trim().split("=");return{name,value:rest.join("=")}})||[]},setAll(cookies){cookies.forEach(({name,value,options})=>response.cookies.set(name,value,options))}}});return{client,response}}

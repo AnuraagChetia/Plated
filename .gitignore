@@ -1,0 +1,21 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+.pnpm-store/
+
+# Local data and logs
+*.db
+*.db-journal
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
