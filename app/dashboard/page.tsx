@@ -1,2 +1,14 @@
-import{cookies}from"next/headers";import{redirect}from"next/navigation";import{readSession,SESSION_COOKIE}from"../../lib/auth";import SignOutButton from"../components/SignOutButton";
-export default async function Dashboard(){const s=await readSession((await cookies()).get(SESSION_COOKIE)?.value);if(!s)redirect("/sign-in");const name=String(s.payload.name||"there");return <main className="dashboardPage"><div className="dashSidebar"><a className="brand" href="/"><i>P</i> plated</a><p>SAFFRON TABLE</p><a className="active" href="#">Overview</a><a href="#">Orders <b>2</b></a><a href="#">Menu</a><a href="#">Reviews</a><a href="#">Media library</a><SignOutButton/></div><section><p className="eyebrow">MONDAY, SEPTEMBER 14</p><h1>Good morning, {name}.</h1><div className="dashboardStats"><article><span>ORDERS TODAY</span><b>12</b><small>↑ 20% from last Monday</small></article><article><span>SALES TODAY</span><b>₹ 8,640</b><small>↑ 14% from last Monday</small></article><article><span>RESTAURANT RATING</span><b>4.7 ★</b><small>328 verified reviews</small></article></div><div className="dashboardWelcome"><p className="eyebrow">YOUR RESTAURANT IS LIVE</p><h2>Welcome to your Plated dashboard.</h2><p>Your first storefront is ready. Next, add your full menu and invite your team.</p><a className="button" href="#menu">Add menu items →</a></div></section></main>}
+import { redirect } from "next/navigation";
+import { createClient } from "../../lib/supabase/server";
+import Dashboard from "./dashboard";
+
+export default async function DashboardPage() {
+  const client = await createClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) redirect("/sign-in");
+  const { data: restaurant, error } = await client.from("restaurants").select("id")
+    .eq("owner_id",user.id).order("created_at").limit(1).maybeSingle();
+  if (error) throw new Error("Could not load your restaurant.");
+  if (!restaurant) redirect("/onboarding");
+  return <Dashboard ownerName={user.user_metadata.name || "there"} />;
+}

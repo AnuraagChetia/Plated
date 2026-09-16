@@ -1,0 +1,106 @@
+/* Restaurant presentation inspired by classic food and hospitality layouts. */
+.publicStore { --store-accent: #b7471d; --store-bright: #ed6934; --store-ink: #292622; --store-muted: #746e66; background: #fff!important; color: var(--store-ink); }
+.publicStore.themeOlive { --store-accent: #50623b; --store-bright: #84965a; color: var(--store-ink); }
+.publicStore h1,.publicStore h2,.publicStore h3 { letter-spacing: -.5px; }
+.publicStore .storeContactBar { background: var(--store-accent); color: white; display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 10px max(24px, calc((100% - 1160px)/2)); font-size: 12px; line-height: 1.5; }
+.storeContactBar>span { overflow-wrap: anywhere; }
+.storeContactBar>div { display: flex; gap: 24px; flex-shrink: 0; }
+.publicStore .storeContactBar a { color: white; text-decoration: none; }
+.publicStore header.storeHeader { position: relative; z-index: 25; min-height: 100px; height: auto; padding: 20px max(24px, calc((100% - 1160px)/2)); gap: 18px; background: #242321; border: 0; color: white; }
+.publicStore header .storeWordmark { font: 700 27px/1.15 'DM Sans',sans-serif; letter-spacing: 1px; text-transform: uppercase; overflow-wrap: anywhere; }
+.storeWordmark small { display: block; font: 400 9px 'DM Sans',sans-serif; letter-spacing: 2.5px; color: #c6beb2; margin-top: 8px; }
+.publicStore .storeNavigation { display: flex; gap: 30px; margin: 0 12px 0 auto; }
+.publicStore .storeNavigation a { color: #fff; text-decoration: none; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0; padding: 10px 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+.publicStore .storeNavigation a:hover { border-color: var(--store-bright); }
+.publicStore .storeLogo { width: 56px; height: 56px; object-fit: contain; }
+.publicStore .logoPlaceholder { background: transparent; color: var(--store-bright); border: 1px solid #897a63; font: 24px Georgia,serif; }
+.publicStore header .logoPlaceholder { display: grid; margin: 0; color: var(--store-bright); font-size: 24px; }
+.publicStore .contextImageEditor.logo { margin: 0; }
+.publicStore .contextImageEditor.logo .imageEditButton { font-size: 9px; padding: 6px 8px; min-height: 26px; white-space: nowrap; }
+.publicStore .imageEditButton { background: #242321e8; color: white; border: 1px solid #ffffff55; border-radius: 2px; }
+.publicStore .imageEditPanel { color: var(--store-ink); }
+.publicStore .storeHero { padding: 0; position: relative; }
+.publicStore .storeHero::after { content: none; }
+.publicStore .storeCoverArea { height: clamp(240px, 40vw, 520px); width: 100%; margin: 0; border-radius: 0; }
+.publicStore .storeCoverArea.emptyCover { background: linear-gradient(125deg, #b85537, #eeab7b); }
+.publicStore.themeOlive .storeCoverArea.emptyCover { background: linear-gradient(125deg, #344d38, #a6b98a); }
+.publicStore .storeHero .storeCover { display: block; width: 100%; height: 100%; max-height: none; object-fit: cover; margin: 0; border-radius: 0; }
+.publicStore .storeDetails { padding: 40px max(24px, 8%); }
+.storeDetails h1 { font: 600 clamp(36px, 5vw, 64px) Fraunces; margin: 12px 0; overflow-wrap: anywhere; }
+.storeDetails p { max-width: 720px; line-height: 1.65; }
+.storeDetails a { color: inherit; }
+.publicStore .storeMenu { padding-top: 30px; }
+.publicStore .cartToggle { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; }
+.publicStore header .cartBadge { position: absolute; right: -4px; top: -4px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 12px; background: #e88461; color: #fff; font-size: 11px; margin: 0; }
+.cartDrawer { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(460px, 100%); max-width: 100%; height: 100dvh; max-height: 100dvh; box-sizing: border-box; border: 0; padding: 0; background: #fffaf1; color: #19372d; overflow-y: auto; overscroll-behavior: contain; box-shadow: -12px 0 50px #0002; }
+.cartDrawer[open] { animation: cart-slide-in 240ms ease-out; }
+.cartDrawer::backdrop { background: #14251dc0; }
+.cartDrawerHeading { position: sticky; top: 0; z-index: 1; background: #fffaf1; border-bottom: 1px solid #e1e3db; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; }
+.cartDrawerHeading h2 { font: 600 30px Fraunces; margin: 4px 0 0; }
+.cartDrawerHeading p { margin: 0; }
+.publicStore .cartClose { background: transparent; color: #19372d; font-size: 28px; width: 44px; height: 44px; padding: 0; border-radius: 50%; }
+.publicStore .cartDrawer .orderBag { position: static; width: auto; max-width: none; margin: 0; border: 0; box-shadow: none; padding: 24px 24px max(24px, env(safe-area-inset-bottom)); background: transparent; }
+@keyframes cart-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .cartDrawer[open] { animation: none; } }
+@media (max-width: 600px) { .publicStore header { padding: 12px 20px; height: auto; min-height: 70px; gap: 12px; } .publicStore header b { font-size: 12px; overflow-wrap: anywhere; } .publicStore header a { font-size: 12px; } .publicStore .storeDetails { padding: 28px 24px; } }
+/* Fooday-inspired section rhythm, orange accents, and restaurant menu layout. */
+.publicStore .storeCoverArea { height: clamp(280px, 42vw, 580px); }
+.publicStore .storeCoverArea.emptyCover { background: radial-gradient(ellipse at 75% 20%, #6e4c34, transparent 60%), #292622; }
+.publicStore .storeDetails { max-width: 980px; margin: auto; padding: 80px 32px; text-align: center; }
+.publicStore .scriptHeading { margin: 0 0 8px; color: var(--store-accent); font: italic 32px/1.4 'Segoe Print','Brush Script MT',Georgia,cursive; letter-spacing: -1px; }
+.publicStore .storeDetails h1 { font: 700 clamp(36px,5vw,62px)/1.15 'DM Sans',sans-serif; text-transform: uppercase; letter-spacing: 2px; margin: 8px 0 16px; }
+.sectionOrnament { display: flex; justify-content: center; align-items: center; gap: 12px; color: var(--store-accent); font-size: 23px; margin: 16px auto 26px; }
+.sectionOrnament>span { width: 52px; height: 1px; background: currentColor; opacity: .65; }
+.publicStore .restaurantStory { max-width: 670px; margin: 0 auto 26px; font-size: 16px; color: var(--store-muted); line-height: 1.9; overflow-wrap: anywhere; }
+.serviceDetails { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 30px; font-size: 12px; color: var(--store-muted); }
+.serviceDetails span { display: inline-flex; align-items: center; gap: 8px; }
+.serviceDetails i { font-size: 22px; color: var(--store-accent); font-style: normal; }
+.publicStore .storePrimaryLink { display: inline-flex; gap: 28px; margin-top: 30px; padding: 15px 24px; border: 1px solid var(--store-accent); color: var(--store-accent); text-decoration: none; text-transform: uppercase; font-size: 11px; letter-spacing: 1.5px; }
+.publicStore .storePrimaryLink:hover { background: var(--store-accent); color: white; }
+.publicStore .storeMenu { display: block; background: #f8f6f1; padding: 70px max(24px, calc((100% - 1160px)/2)) 90px; }
+.menuHeading { text-align: center; }
+.publicStore .menuHeading h2,.publicStore .storeReviews h2 { font: 700 clamp(26px,3.6vw,40px)/1.25 'DM Sans',sans-serif; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+.menuToolbar { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; margin: 38px 0; padding-bottom: 24px; border-bottom: 1px solid #ded8ce; }
+.menuCategories { display: flex; flex-wrap: wrap; gap: 8px; }
+.publicStore .menuCategories button { color: #655d52; background: transparent; border: 1px solid #ded8ce; padding: 11px 18px; font-size: 12px; border-radius: 0; }
+.publicStore .menuCategories button[aria-pressed=true] { background: var(--store-accent); border-color: var(--store-accent); color: white; }
+.publicStore .storeMenu .menuSearch { margin: 0; font-size: 11px; width: 235px; gap: 6px; color: #655d52; }
+.publicStore .menuSearch input { border-radius: 0; border-color: #d4ccc0; background: #fff; padding: 11px 12px; }
+.menuDishGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 48px; }
+.publicStore .storeMenu .menuDish { display: flex; align-items: center; gap: 20px; padding: 24px 0; border: 0; border-bottom: 1px solid #e8e1d7; margin: 0; }
+.publicStore .storeMenu .dishPhoto,.dishPlaceholder { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; flex-shrink: 0; }
+.publicStore .storeMenu .dishPlaceholder { display: grid; place-items: center; background: #eee8de; color: #9f8060; border: 1px solid #dfd2c2; }
+.dishPlaceholder svg { width: 54px; height: 54px; }
+.dishCopy { flex: 1; min-width: 0; }
+.dishTitleLine { display: flex; align-items: baseline; gap: 10px; }
+.publicStore .storeMenu h3 { font: 700 16px/1.4 'DM Sans',sans-serif; color: #292622; margin: 0; }
+.dishTitleLine>span { flex: 1; border-bottom: 1px dotted #aaa093; min-width: 12px; }
+.dishTitleLine>b { color: var(--store-accent); font: 700 17px Georgia,serif; white-space: nowrap; }
+.publicStore .storeMenu .dishCopy p { color: #746e66; line-height: 1.6; font-size: 12px; margin: 9px 0; overflow-wrap: anywhere; }
+.dishBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.publicStore .storeMenu .dishBottom small { font-size: 10px; color: #746e66; text-transform: uppercase; letter-spacing: 1px; }
+.publicStore .storeMenu .dishBottom button { padding: 7px 0; background: transparent; border: 0; border-bottom: 1px solid var(--store-accent); color: var(--store-accent); border-radius: 0; font-size: 11px; }
+.dishBottom button>span { margin-left: 10px; font-size: 16px; }
+.menuEmpty { text-align: center; padding: 30px; color: #746e66; }
+.publicStore .storeReviews { margin: 0; padding: 75px max(24px,calc((100% - 1100px)/2)); max-width: none; background: #292622; color: white; text-align: center; }
+.publicStore .storeReviews .scriptHeading,.publicStore .storeReviews .sectionOrnament { color: #f49b6f; }
+.reviewGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 24px; margin-top: 30px; }
+.publicStore .storeReviews article { border: 1px solid #ffffff26; padding: 28px; text-align: left; background: #ffffff04; }
+.storeReviews article>b { color: #f3b58c; font-size: 13px; }
+.publicStore .storeReviews article p { font: 15px/1.8 Georgia,serif; color: #e4dfd7; }
+.publicStore .reviewEmpty { color: #d0c7bb; font: italic 17px/1.8 Georgia,serif; max-width: 540px; margin: 0 auto; }
+.publicStore .storeFooter { padding: 45px max(24px,calc((100% - 1160px)/2)); background: #1e1d1b; color: #bbb4aa; border: 0; font-size: 12px; gap: 30px; line-height: 1.7; }
+.storeFooter strong { color: #fff; font: 700 23px 'DM Sans',sans-serif; }
+.storeFooter a { color: #edaa7e; text-decoration: none; }
+.storeFooter>div:last-child { text-align: right; }
+.storeFooter .poweredBy { color: #aaa298; font-size: 10px; }
+.publicStore .cartToggle { background: transparent; border: 1px solid #ffffff4d; border-radius: 0; color: white; }
+.publicStore header .cartBadge { background: var(--store-bright); color: #231e18; }
+.publicStore .cartDrawer,.publicStore .cartDrawerHeading { background: #fffdf9; color: #292622; }
+.publicStore .cartDrawerHeading h2 { font: 700 27px 'DM Sans',sans-serif; }
+.publicStore .cartDrawer button { background: var(--store-accent); color: white; }
+.publicStore .cartDrawer .cartClose { background: transparent; color: #292622; }
+.publicStore .cartDrawer input,.publicStore .cartDrawer textarea,.publicStore .cartDrawer select { border-color: #d6cec2; border-radius: 0; color: #292622; }
+.publicStore :is(button,a,input,textarea,select):focus-visible { outline-color: var(--store-accent); }
+@media(max-width:900px) { .menuDishGrid { grid-template-columns: 1fr; } .publicStore .storeNavigation { gap: 16px; } .publicStore header .storeWordmark { font-size: 21px; } .publicStore .storeContactBar { font-size: 11px; } }
+@media(max-width:600px) { .publicStore .storeContactBar { padding: 9px 20px; align-items: start; } .storeContactBar>div { flex-direction: column; gap: 3px; } .publicStore header.storeHeader { padding: 20px; gap: 12px; flex-wrap: wrap; } .publicStore .storeNavigation { order: 4; width: 100%; justify-content: center; margin: 4px 0 -4px; border-top: 1px solid #ffffff22; padding-top: 12px; } .publicStore .cartToggle { margin-left: auto; } .publicStore .storeDetails { padding: 50px 24px; } .publicStore .scriptHeading { font-size: 26px; } .publicStore .storeMenu { padding-top: 50px; padding-bottom: 50px; } .publicStore .menuToolbar { gap: 18px; } .publicStore .storeMenu .menuSearch { width: 100%; } .publicStore .storeMenu .menuDish { flex-wrap: nowrap; gap: 14px; } .publicStore .storeMenu .dishPhoto,.publicStore .storeMenu .dishPlaceholder { width: 68px; height: 68px; } .publicStore .storeMenu .menuDish>.dishCopy { min-width: 0; } .dishTitleLine { flex-wrap: wrap; gap: 5px 10px; } .dishTitleLine>span { display: none; } .publicStore .storeMenu h3 { font-size: 15px; } .publicStore .storeFooter { flex-direction: column; align-items: start; } .storeFooter>div:last-child { text-align: left; } }

@@ -8,6 +8,8 @@ import "./auth-flow.css";
 import "./auth-nav.css";
 import "./local-product.css";
 import "./olive.css";
+import "./dashboard.css";
+import "./storefront.css";
 import Navigation from "./components/Navigation";
 
 export const metadata: Metadata = {

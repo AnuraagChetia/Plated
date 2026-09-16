@@ -1,63 +1,166 @@
 # Plated
 
-Plated is a direct-ordering platform for independent restaurants. Owners create branded ordering sites, manage menus and orders, and retain a direct relationship with diners.
+Plated is a direct-ordering application for independent restaurants. Owners publish a storefront, manage their menu and orders, upload images, and reply to diner reviews.
 
-## Current application
+## Implemented flows
 
-- Owner-facing marketing site, Features, and How it works pages
-- Supabase email/password sign-up and sign-in
-- Session-aware navigation and sign-out
-- Multi-step restaurant onboarding and dashboard foundation
-- Public restaurant storefront route: `/r/[slug]`
-- Local cart and order-placement flow
-- Supabase SQL migration with Row Level Security policies
+- Supabase email/password sign-up, sign-in, session refresh, and protected owner pages.
+- Four-step onboarding with draft recovery, restaurant branding, pickup details, and the first menu item.
+- Public storefront with categories, search, images, recent reviews, and a cart that survives reloads.
+- Pickup or delivery checkout with contact details and notes.
+- Server-calculated totals, saved order items, retry-safe submission, and a database limit of five new orders per contact per restaurant within ten minutes.
+- Private order tracking, with automatic status updates and a review form after completion.
+- Owner dashboard with automatic refresh, new-order notices, order search/filtering, pagination, menu editing with image uploads, review replies, and restaurant settings.
+- Contextual cover and logo editing on the storefront for its authenticated owner, with preview, replace, remove, and save controls.
+- Order progression: `NEW → PREPARING → READY → COMPLETED`; active orders can also be cancelled.
+
+Payments, SMS/email notifications, delivery-provider dispatch, and custom-domain services are intentionally outside the current scope. The restaurant handles payment and fulfillment directly.
 
 ## Stack
 
-- Next.js 16 + TypeScript
-- Supabase Auth + PostgreSQL
-- `@supabase/ssr` for server-side session cookies
-- Local SQLite prototype layer, retained only while Supabase data routes are completed
+- Next.js 16 App Router, React 19, TypeScript
+- Supabase Auth and PostgreSQL with row-level security
+- PGlite for isolated PostgreSQL tests
+- Plain CSS; no UI framework
 
-## Run locally
+## Local setup
+
+Use Node.js 24 and pnpm 11. If reusing `node_modules`, match the pnpm version that originally installed it.
+
+1. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+2. Copy `.env.example` to `.env.local` and configure:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+
+3. Apply **unapplied** migrations in numeric order using Supabase SQL Editor:
+
+   | Migration | Adds |
+   | --- | --- |
+   | [0001](supabase/migrations/0001_plated_schema.sql) | Restaurants, menu items, orders, and initial access policies |
+   | [0002](supabase/migrations/0002_reviews_and_media.sql) | Reviews and media metadata |
+   | [0003](supabase/migrations/0003_order_integrity.sql) | Order items, database pricing, and atomic restaurant creation |
+   | [0004](supabase/migrations/0004_complete_local_features.sql) | Fulfillment, retry keys, tracking, reviews, media content, settings, and summary queries |
+
+   These are incremental migrations, not scripts to rerun on an already-updated database. Apply the pending set in a transaction. Existing restaurants and orders are preserved; older orders have no item details or customer-facing receipt links.
+
+4. Configure Supabase Auth's Site URL and allowed redirect URLs. If email confirmation is enabled, confirm your email before signing in.
+5. Check the schema and start the app:
+
+   ```bash
+   pnpm check:setup
+   pnpm dev
+   ```
+
+Open [the local app](http://127.0.0.1:3000). Use the same hostname consistently for session cookies. Existing restaurant owners should fill in their pickup address and contact phone in **Settings**.
+
+For a production build:
 
 ```bash
-pnpm install
-pnpm dev
+pnpm build
+pnpm start
 ```
 
-Open `http://127.0.0.1:3000`.
+The application uses the publishable key and user sessions; no service-role key is required. Do not commit credentials or local database files.
 
-## Supabase setup
+## Data and security behavior
 
-1. Create a Supabase project.
-2. Copy `.env.example` to `.env.local`.
-3. Set these values:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-```
-
-4. Run [the initial migration](supabase/migrations/0001_plated_schema.sql) in Supabase SQL Editor.
-
-Never commit `.env.local`, database files, or Supabase secret keys. `.gitignore` excludes these.
+- Prices are whole Indian rupees. Checkout submits menu IDs and quantities; the database determines prices.
+- `setup_restaurant` creates the restaurant and its first dish in one transaction.
+- `checkout_order` serializes duplicate request keys and returns the original receipt for an identical retry. Changed details with the same key are rejected.
+- A pending checkout is retained in browser storage and locked against edits until it is confirmed or definitively rejected.
+- The order-tracking secret stays in the URL fragment and is sent in a POST body. Anyone holding the private link can view its receipt and submit its one review; keep it private.
+- Reviews require a completed order and its tracking token. Owners can change their replies, not diner ratings.
+- Image uploads accept PNG, JPEG, or WebP, up to 2 MB each and 30 per restaurant. New files are stored on the application server in `data/uploads` (or `UPLOAD_DIR`); Supabase stores associations and metadata. Existing database-backed images remain readable and are converted to local storage when replaced.
+- Menu images are edited in the dish form. Cover photos and logos are edited on the owner’s storefront. There is no central Media Library. Saving dish details and its image uses two requests; if the image fails, the form retains the saved dish ID so retrying does not create another dish.
+- API errors return JSON, and the browser handles empty/HTML responses without exposing JSON parser exceptions.
+- `proxy.ts` refreshes sessions for pages. API handlers refresh and validate their own sessions without consuming the incoming request body.
 
 ## Routes
 
-| Route | Purpose |
+| Page | Purpose |
 | --- | --- |
-| `/` | Plated landing page |
-| `/how-it-works` | Product workflow |
-| `/features` | Product capabilities |
-| `/sign-up` | Owner account creation |
-| `/sign-in` | Owner sign-in |
-| `/onboarding` | Restaurant setup |
-| `/dashboard` | Owner dashboard |
-| `/r/[slug]` | Public restaurant storefront |
+| `/`, `/features`, `/how-it-works` | Marketing pages |
+| `/sign-up`, `/sign-in` | Owner authentication |
+| `/onboarding` | Restaurant creation; sign-in required |
+| `/dashboard` | Owner operations; sign-in required |
+| `/r/[slug]` | Published restaurant storefront |
+| `/order/[id]#token` | Private receipt, status, and review |
 
-## Next milestones
+| API | Methods | Purpose |
+| --- | --- | --- |
+| `/api/restaurants` | GET, POST, PATCH | Read, create, and configure the owner's restaurant |
+| `/api/dashboard` | GET | Paginated orders/reviews, menu, media, queue, and aggregate metrics |
+| `/api/menu` | POST, PATCH | Add/edit dishes, categories, descriptions, and availability |
+| `/api/orders` | POST, PATCH | Submit checkout or advance/cancel an order |
+| `/api/orders/track` | POST | Read a receipt using its private token |
+| `/api/reviews` | POST, PATCH | Submit a diner review or save an owner reply |
+| `/api/media?restaurant=…&kind=logo|cover|menu_item&dish=…` | POST, DELETE | Replace/remove an image at its feature location; dish required for menu images |
+| `/api/media/[id]` | GET | Read an image subject to restaurant visibility |
+| `/api/auth/sign-up`, `/api/auth/sign-in`, `/api/auth/sign-out` | POST | Auth handlers |
+| `/api/auth/me` | GET | Current user |
 
-1. Complete Supabase-backed restaurants, menus, orders, and dashboard queries.
-2. Add media uploads and review workflows.
-3. Add payment/payout integration and wildcard storefront domains.
+## Repository map
+
+```text
+app/
+  api/                     JSON API and image handlers
+  components/              Shared navigation
+  dashboard/               Owner dashboard and editors
+  onboarding/              Restaurant setup wizard
+  order/[id]/              Private receipt and review form
+  r/[slug]/                Storefront and persistent cart
+lib/
+  api-client.ts            Safe response parsing
+  api-server.ts            JSON exception boundaries and setup errors
+  browser-storage.ts       Resilient browser storage access
+  http.ts                  Bounded request-body parsing
+  media.ts                 Image type/size validation
+  storage.ts               StorageService and local filesystem implementation
+  models.ts                Shared application types
+  orders.ts                Checkout validation and status helpers
+  supabase/                Browser, server, and route clients
+proxy.ts                   Page session refresh/protection
+supabase/migrations/       Ordered schema changes
+scripts/check-setup.cjs    Read-only database configuration check
+tests/                     API regression and database workflow tests
+```
+
+`lib/db.ts`, `lib/auth.ts`, and root HTML/CSS/JS prototypes are legacy files. Active routes use Supabase; SQLite data is not automatically imported.
+
+## Verification
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Tests run without live Supabase credentials. They cover the launch request-body regression, empty/non-JSON responses, onboarding response shapes, cart validation, database migrations, duplicate checkout handling, fulfillment/status rules, private tracking, reviews/replies, contact limits, and media access policies.
+
+For database-level verification against an existing Supabase project, run [smoke-test.sql](supabase/smoke-test.sql) in SQL Editor as the database administrator. It requires an account without a restaurant and verifies launch, checkout, retries, private tracking, order statuses, and review replies. All sample records are rolled back. This check passed against the connected project after migrations 0002–0004 were applied.
+
+After configuring the database, verify the full flow: launch a restaurant, edit its menu, upload an image, place an order, track it, advance it to completion, submit a review, and reply from the dashboard. Check both desktop and narrow layouts.
+
+## Troubleshooting
+
+- **Launch returned an empty/non-JSON response:** restart the development server after pulling code changes. The current client shows a recoverable error and retains the draft. The API cookie helper must copy only request headers, not construct a new request from the POST request body.
+- **Database update not installed / missing table or function:** run `pnpm check:setup`, apply only pending migrations through 0004, and retry.
+- **No pickup option:** add a pickup address and enable pickup in Settings.
+- **Order awaiting confirmation after a network failure:** use **Retry and confirm order**. Keep the saved request key so the database can recover the original receipt.
+- **pnpm store mismatch:** use the same pnpm major version that installed `node_modules`.
+
+## Operating limits
+
+Dashboard lists use 20 orders or 10 reviews per page, with aggregate metrics across the restaurant. Automatic refresh polls every ten seconds while the page is visible; it does not require a separate real-time service. Media supports images rather than video. The contact quota is a basic abuse limit, not phone verification or a substitute for deployment-level traffic protection. Delivery fees, taxes, payment reconciliation, and third-party dispatch are not calculated by this app.
+
+### Local image storage
+
+Keep `UPLOAD_DIR` on a persistent writable volume and back it up alongside the database. Files are served through `/api/media/[id]` after database visibility checks, not from a public uploads directory. Local uploads require a persistent application server; deployments with multiple instances must share the same volume. `StorageService` separates validation, upload, read, deletion, and URL generation so an S3 adapter can replace the local implementation later. S3 is not implemented.
