@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "./motion.css";
-import "./billboard.css";
+
+
 import "./navigation.css";
 import "./flow.css";
 import "./auth-flow.css";
 import "./auth-nav.css";
 import "./local-product.css";
-import "./olive.css";
 import "./dashboard.css";
 import "./storefront.css";
+import "./owner-dashboard.css";
+import "./brand.css";
 import Navigation from "./components/Navigation";
 
 export const metadata: Metadata = {

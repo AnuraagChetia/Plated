@@ -1,6 +1,5 @@
 /* Restaurant presentation inspired by classic food and hospitality layouts. */
 .publicStore { --store-accent: #b7471d; --store-bright: #ed6934; --store-ink: #292622; --store-muted: #746e66; background: #fff!important; color: var(--store-ink); }
-.publicStore.themeOlive { --store-accent: #50623b; --store-bright: #84965a; color: var(--store-ink); }
 .publicStore h1,.publicStore h2,.publicStore h3 { letter-spacing: -.5px; }
 .publicStore .storeContactBar { background: var(--store-accent); color: white; display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 10px max(24px, calc((100% - 1160px)/2)); font-size: 12px; line-height: 1.5; }
 .storeContactBar>span { overflow-wrap: anywhere; }
@@ -12,7 +11,7 @@
 .publicStore .storeNavigation { display: flex; gap: 30px; margin: 0 12px 0 auto; }
 .publicStore .storeNavigation a { color: #fff; text-decoration: none; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0; padding: 10px 0; border-bottom: 2px solid transparent; white-space: nowrap; }
 .publicStore .storeNavigation a:hover { border-color: var(--store-bright); }
-.publicStore .storeLogo { width: 56px; height: 56px; object-fit: contain; }
+.publicStore .storeLogo { display: block; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: center; }
 .publicStore .logoPlaceholder { background: transparent; color: var(--store-bright); border: 1px solid #897a63; font: 24px Georgia,serif; }
 .publicStore header .logoPlaceholder { display: grid; margin: 0; color: var(--store-bright); font-size: 24px; }
 .publicStore .contextImageEditor.logo { margin: 0; }
@@ -23,7 +22,6 @@
 .publicStore .storeHero::after { content: none; }
 .publicStore .storeCoverArea { height: clamp(240px, 40vw, 520px); width: 100%; margin: 0; border-radius: 0; }
 .publicStore .storeCoverArea.emptyCover { background: linear-gradient(125deg, #b85537, #eeab7b); }
-.publicStore.themeOlive .storeCoverArea.emptyCover { background: linear-gradient(125deg, #344d38, #a6b98a); }
 .publicStore .storeHero .storeCover { display: block; width: 100%; height: 100%; max-height: none; object-fit: cover; margin: 0; border-radius: 0; }
 .publicStore .storeDetails { padding: 40px max(24px, 8%); }
 .storeDetails h1 { font: 600 clamp(36px, 5vw, 64px) Fraunces; margin: 12px 0; overflow-wrap: anywhere; }
@@ -104,3 +102,7 @@
 .publicStore :is(button,a,input,textarea,select):focus-visible { outline-color: var(--store-accent); }
 @media(max-width:900px) { .menuDishGrid { grid-template-columns: 1fr; } .publicStore .storeNavigation { gap: 16px; } .publicStore header .storeWordmark { font-size: 21px; } .publicStore .storeContactBar { font-size: 11px; } }
 @media(max-width:600px) { .publicStore .storeContactBar { padding: 9px 20px; align-items: start; } .storeContactBar>div { flex-direction: column; gap: 3px; } .publicStore header.storeHeader { padding: 20px; gap: 12px; flex-wrap: wrap; } .publicStore .storeNavigation { order: 4; width: 100%; justify-content: center; margin: 4px 0 -4px; border-top: 1px solid #ffffff22; padding-top: 12px; } .publicStore .cartToggle { margin-left: auto; } .publicStore .storeDetails { padding: 50px 24px; } .publicStore .scriptHeading { font-size: 26px; } .publicStore .storeMenu { padding-top: 50px; padding-bottom: 50px; } .publicStore .menuToolbar { gap: 18px; } .publicStore .storeMenu .menuSearch { width: 100%; } .publicStore .storeMenu .menuDish { flex-wrap: nowrap; gap: 14px; } .publicStore .storeMenu .dishPhoto,.publicStore .storeMenu .dishPlaceholder { width: 68px; height: 68px; } .publicStore .storeMenu .menuDish>.dishCopy { min-width: 0; } .dishTitleLine { flex-wrap: wrap; gap: 5px 10px; } .dishTitleLine>span { display: none; } .publicStore .storeMenu h3 { font-size: 15px; } .publicStore .storeFooter { flex-direction: column; align-items: start; } .storeFooter>div:last-child { text-align: left; } }
+
+.publicStore .logoEditTrigger{display:block;padding:0;background:transparent;border:0;border-radius:50%;cursor:pointer;position:relative}
+.publicStore .logoEditTrigger:hover{box-shadow:0 0 0 3px var(--store-bright)}
+.publicStore .logoEditTrigger:focus-visible{outline:3px solid var(--store-bright);outline-offset:4px}

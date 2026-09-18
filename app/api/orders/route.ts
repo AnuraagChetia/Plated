@@ -13,6 +13,8 @@ async function handlePOST(request: Request) {
     checkout: input.checkout, request_key: input.requestId,
   });
   if (error) {
+    if (error.code === "P0409") return json({error:"The restaurant has stopped taking new orders. Your order was not placed."},409);
+    if (error.code === "P0410") return json({error:"The restaurant is currently closed. Please order during its opening hours."},409);
     if (error.code === "P0429") return json({ error: "Too many orders for this phone number. Try again in ten minutes." }, 429);
     if (error.code === "22000") return json({ error: "This checkout was already submitted with different details." }, 409);
     if (error.code === "22023") return json({ error: "The cart or fulfillment option is unavailable. Refresh the menu and check your details." }, 400);

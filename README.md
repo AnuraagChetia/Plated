@@ -5,18 +5,21 @@ Plated is a direct-ordering application for independent restaurants. Owners publ
 ## Implemented flows
 
 - Supabase email/password sign-up, sign-in, session refresh, and protected owner pages.
-- Four-step onboarding with draft recovery, restaurant branding, pickup details, and the first menu item.
+- Three-step onboarding with draft recovery, restaurant branding, pickup details, and the first menu item.
 - Public storefront with categories, search, images, recent reviews, and a cart that survives reloads.
 - Pickup or delivery checkout with contact details and notes.
 - Server-calculated totals, saved order items, retry-safe submission, and a database limit of five new orders per contact per restaurant within ten minutes.
 - Private order tracking, with automatic status updates and a review form after completion.
 - Owner dashboard with automatic refresh, new-order notices, order search/filtering, pagination, menu editing with image uploads, review replies, and restaurant settings.
+- Editable storefront addresses in restaurant settings; renaming suggests a matching address, with owner-only saves and duplicate-address validation. Previous storefront URLs stop working after an address change.
 - Contextual cover and logo editing on the storefront for its authenticated owner, with preview, replace, remove, and save controls.
 - Order progression: `NEW → PREPARING → READY → COMPLETED`; active orders can also be cancelled.
 
 Payments, SMS/email notifications, delivery-provider dispatch, and custom-domain services are intentionally outside the current scope. The restaurant handles payment and fulfillment directly.
 
 ## Stack
+
+The application uses a shared restaurant-inspired design: charcoal, warm white, burnt-orange accents, and handwritten headings. `app/brand.css` styles the homepage, marketing pages, authentication, onboarding, and order tracking alongside the storefront and owner-dashboard styles. Public pages share `PublicFooter`; homepage previews are labeled examples.
 
 - Next.js 16 App Router, React 19, TypeScript
 - Supabase Auth and PostgreSQL with row-level security
@@ -48,6 +51,9 @@ Use Node.js 24 and pnpm 11. If reusing `node_modules`, match the pnpm version th
    | [0002](supabase/migrations/0002_reviews_and_media.sql) | Reviews and media metadata |
    | [0003](supabase/migrations/0003_order_integrity.sql) | Order items, database pricing, and atomic restaurant creation |
    | [0004](supabase/migrations/0004_complete_local_features.sql) | Fulfillment, retry keys, tracking, reviews, media content, settings, and summary queries |
+
+   | [0005](supabase/migrations/0005_storefront_underscores.sql) | Underscores in storefront addresses |
+   | [0006](supabase/migrations/0006_customer_profiles_and_hours.sql) | Private customer profiles, addresses, order history, and daily restaurant hours |
 
    These are incremental migrations, not scripts to rerun on an already-updated database. Apply the pending set in a transaction. Existing restaurants and orders are preserved; older orders have no item details or customer-facing receipt links.
 
@@ -133,7 +139,7 @@ scripts/check-setup.cjs    Read-only database configuration check
 tests/                     API regression and database workflow tests
 ```
 
-`lib/db.ts`, `lib/auth.ts`, and root HTML/CSS/JS prototypes are legacy files. Active routes use Supabase; SQLite data is not automatically imported.
+Legacy SQLite/JWT code, unused sign-out component, and standalone HTML/CSS/JS prototypes have been removed. Existing local data files are preserved. Active routes use Supabase.
 
 ## Verification
 
@@ -152,7 +158,7 @@ After configuring the database, verify the full flow: launch a restaurant, edit 
 ## Troubleshooting
 
 - **Launch returned an empty/non-JSON response:** restart the development server after pulling code changes. The current client shows a recoverable error and retains the draft. The API cookie helper must copy only request headers, not construct a new request from the POST request body.
-- **Database update not installed / missing table or function:** run `pnpm check:setup`, apply only pending migrations through 0004, and retry.
+- **Database update not installed / missing table or function:** run `pnpm check:setup`, apply only pending migrations through 0006, and retry.
 - **No pickup option:** add a pickup address and enable pickup in Settings.
 - **Order awaiting confirmation after a network failure:** use **Retry and confirm order**. Keep the saved request key so the database can recover the original receipt.
 - **pnpm store mismatch:** use the same pnpm major version that installed `node_modules`.
@@ -164,3 +170,23 @@ Dashboard lists use 20 orders or 10 reviews per page, with aggregate metrics acr
 ### Local image storage
 
 Keep `UPLOAD_DIR` on a persistent writable volume and back it up alongside the database. Files are served through `/api/media/[id]` after database visibility checks, not from a public uploads directory. Local uploads require a persistent application server; deployments with multiple instances must share the same volume. `StorageService` separates validation, upload, read, deletion, and URL generation so an S3 adapter can replace the local implementation later. S3 is not implemented.
+
+### Owner shortcuts
+
+- Click the storefront logo to upload, replace, or remove it (owners only).
+- In Dashboard → Menu, use Create category to name a category and save its first dish. Existing categories offer Add dish, and dish editors can move dishes between categories.
+- Save confirmations dismiss after four seconds and can also be closed manually.
+- The homepage Start for free action checks the session: signed-in users go to the dashboard; other visitors go to onboarding.
+
+Storefront sign-in uses customer-facing copy and preserves restaurant context through registration. Accounts owning a restaurant are routed to their dashboard. Customer profiles save contact details and up to 20 delivery addresses. The latest 100 orders placed while signed in appear in My account. Every checkout opens a tracking-link confirmation modal; guests can reopen their latest link on the same device. Migration `0005_storefront_underscores.sql` allows underscores during restaurant launch.
+
+### Customer checkout and opening hours
+
+- My account lets customers edit their name/phone and add, edit, or remove saved addresses. Checkout prefills saved details, offers address selection, and can save edited delivery details as a new address. Existing orders retain their original contact/address snapshot.
+- Signed-in orders are linked to the authenticated user by the database. Earlier guest orders are not automatically attached to accounts. Guest tracking links stay on the current device and can be copied from the confirmation dialog. WhatsApp delivery is not integrated.
+- Restaurant settings include optional daily opening/closing times and an IANA timezone (default Asia/Kolkata). Overnight hours work; an unset schedule allows ordering whenever the owner enables Accept new orders. Manual pauses override the schedule. Availability refreshes every 15 seconds and checkout rechecks it atomically in the database.
+- Invalid/expired sessions redirect to sign-in. Temporary authentication service/network failures lead to a retry page without exposing protected content. Local logs have shown ECONNRESET failures contacting Supabase; a retry screen cannot eliminate upstream connection failures.
+
+KhaoKa’s six sample dishes have been added as real available menu items at their preview prices. `scripts/seed-khaoka-menu.sql` adds them without duplicating or overwriting existing names. `/r/khaoka` fills empty review-carousel positions with clearly labeled fictional feedback; real reviews take priority. KhaoKa is the dedicated demo restaurant, with no separate preview mode. Category illustrations fill missing menu photos. See [the client walkthrough](docs/khaoka-demo.md) for a presentation checklist.
+
+The storefront shows only the newest six reviews in one horizontal carousel: three cards on desktop, two on tablet, and one on mobile. It advances every five seconds, pauses on hover/focus, offers previous/next and pause controls, and respects reduced-motion preferences.

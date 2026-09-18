@@ -39,10 +39,11 @@ test('launch handles both Supabase composite response shapes and reports missing
   let databaseResult = {data:{id:'restaurant'},error:null};
   const { POST } = load('app/api/restaurants/route.ts', {
     '../../../lib/supabase/route': { routeClient: () => ({client:{auth:{getUser:async () => ({data:{user:{id:'owner'}}})},rpc:async () => databaseResult},json:(body,status=200) => Response.json(body,{status})}) },
+    '../../../lib/hours':load('lib/hours.ts'),
     '../../../lib/restaurant-validation':load('lib/restaurant-validation.ts'),
     '../../../lib/http':{readJson}, '../../../lib/api-server':{withApi,databaseMessage},
   });
-  const request = () => new Request('http://local/api/restaurants',{method:'POST',body:JSON.stringify({name:'Test Kitchen',slug:'test-kitchen',description:'Seasonal food',theme:'olive',dishName:'Dal',dishPrice:310,pickupAddress:'123 Test Street',contactPhone:'9999999999'})});
+  const request = () => new Request('http://local/api/restaurants',{method:'POST',body:JSON.stringify({name:'Test Kitchen',slug:'test-kitchen',description:'Seasonal food',dishName:'Dal',dishPrice:310,pickupAddress:'123 Test Street',contactPhone:'9999999999'})});
   for (const data of [{id:'restaurant'},[{id:'restaurant'}]]) {
     databaseResult = {data,error:null};
     const response = await POST(request()); assert.equal(response.status,201); assert.equal((await response.json()).restaurant.id,'restaurant');

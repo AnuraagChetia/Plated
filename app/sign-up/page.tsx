@@ -1,2 +1,9 @@
-"use client";import Link from"next/link";import{useRouter}from"next/navigation";import{useState}from"react";import{createClient}from"../../lib/supabase/client";
-export default function SignUp(){const r=useRouter(),[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[message,setMessage]=useState(""),[loading,setLoading]=useState(false);async function submit(e:React.FormEvent){e.preventDefault();setLoading(true);const{data,error}=await createClient().auth.signUp({email,password,options:{data:{name}}});if(error)setMessage(error.message);else if(data.session)r.push("/onboarding");else setMessage("Check your email to confirm your account, then sign in.");setLoading(false)}return <main className="authPage"><div className="authCard"><Link className="brand" href="/"><i>P</i> plated</Link><p className="eyebrow">WELCOME TO PLATED</p><h1>Let’s create your account.</h1><p>Start building a direct ordering home for your restaurant.</p><form onSubmit={submit}><label>Your name<input value={name} onChange={e=>setName(e.target.value)} required/></label><label>Work email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>Create password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} minLength={8} required/></label>{message&&<p className="authError">{message}</p>}<button className="button" disabled={loading}>{loading?"Creating account…":"Create account →"}</button></form><footer>Already have an account? <Link href="/sign-in">Sign in</Link></footer></div></main>}
+import AuthForm from "../components/AuthForm";
+import {validStorefrontSlug} from "../../lib/restaurant-validation";
+import {createClient} from "../../lib/supabase/server";
+export default async function Page({searchParams}:{searchParams:Promise<{store?:string}>}){
+ const query=await searchParams;const store=validStorefrontSlug(query.store)?query.store:undefined;
+ let name:string|undefined;
+ if(store){const client=await createClient();const {data}=await client.from("restaurants").select("name").eq("slug",store).maybeSingle();name=data?.name;}
+ return <AuthForm mode="sign-up" store={store} name={name}/>;
+}

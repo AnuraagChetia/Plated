@@ -8,7 +8,7 @@ export const nextStatus: Record<string, string> = { NEW: "PREPARING", PREPARING:
 export function parseOrder(value: unknown): OrderInput | null {
   if (!value || typeof value !== "object") return null;
   const { slug, customerName, items, requestId, checkout } = value as Record<string, unknown>;
-  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) return null;
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(slug) || slug.length > 80) return null;
   if (typeof customerName !== "string" || !customerName.trim() || customerName.trim().length > 100) return null;
   if (typeof requestId !== "string" || !UUID.test(requestId)) return null;
   if (!checkout || typeof checkout !== "object") return null;

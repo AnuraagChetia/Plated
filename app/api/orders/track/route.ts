@@ -10,7 +10,13 @@ async function handlePOST(request: Request) {
   const { data, error } = await client.rpc("track_order", { order_id_value: input.id, access_token: input.token });
   if (error) return json({ error: "Could not refresh this order. Please try again." }, 503);
   if (!data) return json({ error: "Order not found. Open the original private order link." }, 404);
-  return json({ order: data });
+  const { data: restaurant } = await client.from("restaurants").select("id").eq("slug", data.restaurant_slug).maybeSingle();
+  let logoUrl: string | undefined;
+  if (restaurant) {
+    const { data: logo } = await client.from("media_assets").select("id").eq("restaurant_id", restaurant.id).eq("kind", "logo").order("created_at", { ascending:false }).limit(1).maybeSingle();
+    if (logo) logoUrl = "/api/media/" + logo.id;
+  }
+  return json({ order: { ...data, restaurant_logo_url: logoUrl } });
 }
 
 export const POST = withApi(handlePOST);

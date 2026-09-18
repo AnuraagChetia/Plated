@@ -18,17 +18,22 @@ export async function proxy(request: NextRequest) {
       } },
     );
     const { data: { user }, error } = await client.auth.getUser();
-    const protectedPage = /^\/(dashboard|onboarding)(\/|$)/.test(request.nextUrl.pathname);
-    if (error && error.name !== "AuthSessionMissingError" && protectedPage) throw error;
+    const protectedPage = /^\/(dashboard|onboarding|profile)(\/|$)/.test(request.nextUrl.pathname);
+    const invalidSession = error && (error.name === "AuthSessionMissingError" || error.status === 400 || error.status === 401 || ["refresh_token_not_found","refresh_token_already_used","session_not_found","bad_jwt"].includes(error.code || ""));
+    if (error && !invalidSession && protectedPage) throw error;
     if (!user && protectedPage) {
-      const redirect = NextResponse.redirect(new URL("/sign-in", request.url));
+      const target = new URL("/sign-in", request.url);
+      const store=request.nextUrl.searchParams.get("store");if(store)target.searchParams.set("store",store);
+      const redirect = NextResponse.redirect(target);
       response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
       return redirect;
     }
     return response;
   } catch {
-    if (!/^\/(dashboard|onboarding)(\/|$)/.test(request.nextUrl.pathname)) return response;
-    return new NextResponse("Sign-in is temporarily unavailable. Please reload this page in a moment.", { status:503, headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"} });
+    if (!/^\/(dashboard|onboarding|profile)(\/|$)/.test(request.nextUrl.pathname)) return response;
+    const target=new URL("/auth-unavailable",request.url);
+    target.searchParams.set("next",request.nextUrl.pathname+request.nextUrl.search);
+    const redirect=NextResponse.redirect(target);response.cookies.getAll().forEach(cookie=>redirect.cookies.set(cookie));redirect.headers.set("Cache-Control","no-store");return redirect;
   }
 }
 export const config = { matcher: ["/((?!api/|_next/static|_next/image|favicon.ico).*)"] };

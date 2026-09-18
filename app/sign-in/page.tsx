@@ -1,2 +1,9 @@
-"use client";import Link from"next/link";import{useRouter}from"next/navigation";import{useState}from"react";import{createClient}from"../../lib/supabase/client";
-export default function SignIn(){const r=useRouter(),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false);async function submit(e:React.FormEvent){e.preventDefault();setLoading(true);const{error}=await createClient().auth.signInWithPassword({email,password});if(error){setError(error.message);setLoading(false)}else r.push("/dashboard")}return <main className="authPage"><div className="authCard"><Link className="brand" href="/"><i>P</i> plated</Link><p className="eyebrow">WELCOME BACK</p><h1>Sign in to your restaurant.</h1><p>Pick up where your team left off.</p><form onSubmit={submit}><label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>{error&&<p className="authError">{error}</p>}<button className="button" disabled={loading}>{loading?"Signing in…":"Sign in →"}</button></form><footer>New to Plated? <Link href="/sign-up">Create your account</Link></footer></div></main>}
+import AuthForm from "../components/AuthForm";
+import {validStorefrontSlug} from "../../lib/restaurant-validation";
+import {createClient} from "../../lib/supabase/server";
+export default async function Page({searchParams}:{searchParams:Promise<{store?:string}>}){
+ const query=await searchParams;const store=validStorefrontSlug(query.store)?query.store:undefined;
+ let name:string|undefined;
+ if(store){const client=await createClient();const {data}=await client.from("restaurants").select("name").eq("slug",store).maybeSingle();name=data?.name;}
+ return <AuthForm mode="sign-in" store={store} name={name}/>;
+}

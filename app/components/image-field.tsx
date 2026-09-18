@@ -40,14 +40,14 @@ export function ImageField({ current, value, onChange, disabled = false }: {
   </fieldset>;
 }
 
-export function StorefrontImageEditor({ restaurantId, kind, current, onSaved }: {
-  restaurantId: string; kind: "logo" | "cover"; current?: string; onSaved: () => void;
+export function StorefrontImageEditor({ restaurantId, kind, current, onSaved, children }: {
+  restaurantId: string; kind: "logo" | "cover"; current?: string; onSaved: () => void; children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [change, setChange] = useState<ImageChange>();
   return <div className={`contextImageEditor ${kind}`}>
-    <button type="button" className="outline imageEditButton" onClick={() => { setOpen(true); setError(""); setChange(undefined); }}>
-      {kind === "cover" ? "Edit Cover Photo" : "Change Logo"}
+    <button type="button" className={kind === "logo" ? "logoEditTrigger" : "outline imageEditButton"} aria-label={kind === "logo" ? "Edit restaurant logo" : undefined} title={kind === "logo" ? "Click to edit logo" : undefined} aria-expanded={open} onClick={() => { setOpen(true); setError(""); setChange(undefined); }}>
+      {kind === "cover" ? "Edit Cover Photo" : children}
     </button>
     {open && <div className="imageEditPanel" role="region" aria-label={kind === "cover" ? "Edit cover photo" : "Edit logo"}>
       <ImageField current={current} value={change} onChange={setChange} disabled={busy} />

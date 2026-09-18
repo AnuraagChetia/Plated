@@ -22,14 +22,14 @@ test('complete database workflow and access policies', async t => {
     for (const file of fs.readdirSync(path.resolve(__dirname,'../supabase/migrations')).sort()) await db.exec(fs.readFileSync(path.resolve(__dirname,'../supabase/migrations',file),'utf8'));
     await db.query('insert into auth.users(id) values ($1),($2)',[owner,other]);
     await role('authenticated',owner);
-    const launch = () => db.query("select (public.setup_restaurant('Test Kitchen','test-kitchen','Fresh food','olive','Dal',310,'123 Test Street','9999999999')).id");
+    const launch = () => db.query("select (public.setup_restaurant('Test Kitchen','test_kitchen','Fresh food','olive','Dal',310,'123 Test Street','9999999999')).id");
     const restaurant = (await launch()).rows[0].id;
     const dish = (await db.query('select id,price from public.menu_items')).rows[0];
     const checkout = {phone:'9999999999',fulfillment:'PICKUP',address:'',notes:'No cutlery'};
     const cart = [{id:dish.id,quantity:2,price:1}];
     const requestId = randomUUID();
     const place = async (items = cart,key = requestId,details = checkout) =>
-      (await db.query("select public.checkout_order('test-kitchen',' Guest ',$1::jsonb,$2::jsonb,$3) as receipt",[JSON.stringify(items),JSON.stringify(details),key])).rows[0].receipt;
+      (await db.query("select public.checkout_order('test_kitchen',' Guest ',$1::jsonb,$2::jsonb,$3) as receipt",[JSON.stringify(items),JSON.stringify(details),key])).rows[0].receipt;
     let receipt;
 
     await t.test('launch is atomic and retry-safe', async () => {
@@ -48,7 +48,7 @@ test('complete database workflow and access policies', async t => {
       assert.deepEqual(await place(),receipt);
       await assert.rejects(place([{id:dish.id,quantity:3}]),error => error.code === '22000');
       assert.equal((await db.query('select * from public.orders')).rows.length,0);
-      await assert.rejects(db.query("select public.place_order('test-kitchen','Guest',$1::jsonb)",[JSON.stringify(cart)]),/permission denied/);
+      await assert.rejects(db.query("select public.place_order('test_kitchen','Guest',$1::jsonb)",[JSON.stringify(cart)]),/permission denied/);
       await assert.rejects(db.query("insert into public.orders(restaurant_id,customer_name,total) values ($1,'Guest',1)",[restaurant]),/permission denied/);
       await role('authenticated',owner);
       const saved = (await db.query('select total,customer_name,customer_phone,fulfillment,notes from public.orders where id=$1',[receipt.id])).rows[0];
@@ -114,7 +114,7 @@ test('complete database workflow and access policies', async t => {
       await db.query('update public.restaurants set accepting_orders=false where id=$1',[restaurant]);
       await role('anon');
       assert.deepEqual(await place(),receipt);
-      await assert.rejects(place(cart,randomUUID(),{...checkout,phone:'8888888888'}),error => error.code === '22023');
+      await assert.rejects(place(cart,randomUUID(),{...checkout,phone:'8888888888'}),error => error.code === 'P0409');
       await role('authenticated',owner);
       await db.query('update public.restaurants set accepting_orders=true,accepts_delivery=true where id=$1',[restaurant]);
       await role('anon');
@@ -134,6 +134,41 @@ test('complete database workflow and access policies', async t => {
       await role('anon');
       assert.equal((await db.query('select id from public.media_assets')).rows.length,0);
       assert.equal((await db.query('select id from public.reviews')).rows.length,0);
+    });
+
+    await t.test('profiles and addresses are isolated; signed-in orders are attached to the verified customer',async()=>{
+      await role('authenticated',owner);
+      await db.query('update public.restaurants set is_published=true where id=$1',[restaurant]);
+      await db.query("insert into public.customer_profiles(user_id,name,phone) values ($1,'Owner','9999999999')",[owner]);
+      await role('authenticated',other);
+      assert.equal((await db.query('select * from public.customer_profiles')).rows.length,0);
+      await assert.rejects(db.query("insert into public.customer_profiles(user_id,name) values ($1,'Imposter')",[owner]),e=>e.code==='42501');
+      await db.query("insert into public.customer_profiles(user_id,name,phone) values ($1,'Customer','7777777777')",[other]);
+      const address=(await db.query("insert into public.customer_addresses(user_id,label,recipient,phone,address) values ($1,'Home','Customer','7777777777','123 Customer Street') returning id",[other])).rows[0].id;
+      await db.query("update public.customer_addresses set label='Work' where id=$1",[address]);
+      const customerReceipt=await place(cart,randomUUID(),{...checkout,phone:'7777777777'});
+      let history=(await db.query('select public.customer_order_history() as history')).rows[0].history;
+      assert.equal(history.length,1);assert.equal(history[0].id,customerReceipt.id);assert.equal(history[0].tracking_token,customerReceipt.token);
+      await role('authenticated',owner);
+      assert.equal((await db.query('select * from public.customer_addresses')).rows.length,0);
+      assert.equal((await db.query('delete from public.customer_addresses where id=$1 returning id',[address])).rows.length,0);
+      assert.equal((await db.query('select public.customer_order_history() as history')).rows[0].history.length,0);
+      await role('anon');
+      await assert.rejects(db.query('select * from public.customer_profiles'),e=>e.code==='42501');
+      await assert.rejects(db.query('select public.customer_order_history()'),e=>e.code==='42501');
+      await role('authenticated',other);
+      assert.equal((await db.query('delete from public.customer_addresses where id=$1 returning id',[address])).rows.length,1);
+    });
+    await t.test('opening hours reject new orders but allow retries of confirmed orders',async()=>{
+      await role('authenticated',owner);
+      await assert.rejects(db.query("update public.restaurants set timezone='Unknown/Zone' where id=$1",[restaurant]),e=>e.code==='22023');
+      await db.query("update public.restaurants set timezone='UTC', opens_at=((current_timestamp at time zone 'UTC')+interval '1 hour')::time, closes_at=((current_timestamp at time zone 'UTC')+interval '2 hours')::time where id=$1",[restaurant]);
+      await role('anon');
+      await assert.rejects(place(cart,randomUUID(),{...checkout,phone:'6666666666'}),e=>e.code==='P0410');
+      assert.deepEqual(await place(),receipt);
+      await role('authenticated',owner);
+      await db.query("update public.restaurants set opens_at=((current_timestamp at time zone 'UTC')-interval '1 hour')::time, closes_at=((current_timestamp at time zone 'UTC')+interval '1 hour')::time where id=$1",[restaurant]);
+      await role('anon');assert.ok((await place(cart,randomUUID(),{...checkout,phone:'6666666666'})).id);
     });
   } finally { await db.close(); }
 });

@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import RestaurantNavigation from "../../components/RestaurantNavigation";
 import { money, UUID } from "../../../lib/orders";
 import { responseJson } from "../../../lib/api-client";
 
-type TrackedOrder = { id:string;status:string;total:number;created_at:string;fulfillment:string;restaurant_name:string;restaurant_slug:string;pickup_address:string;contact_phone:string;estimated_minutes:number;
+type TrackedOrder = { id:string;status:string;total:number;created_at:string;fulfillment:string;restaurant_name:string;restaurant_slug:string;restaurant_logo_url?:string;pickup_address:string;contact_phone:string;estimated_minutes:number;
   items:{name:string;quantity:number;unit_price:number}[];review:{rating:number;comment:string | null;owner_reply:string | null} | null };
 const descriptions: Record<string,string> = {
   NEW:"Your order has been received and is waiting for the restaurant to accept it.",
@@ -49,7 +50,7 @@ export default function Tracker({ id }: { id:string }) {
     } catch(cause) { setError(cause instanceof Error ? cause.message : "Could not submit review."); }
     finally { setBusy(false); }
   }
-  return <main className="trackingPage"><section className="panel">
+  return <>{order && <RestaurantNavigation name={order.restaurant_name} slug={order.restaurant_slug} logoUrl={order.restaurant_logo_url} />}<main className="trackingPage"><section className="panel">
     <p className="eyebrow">YOUR ORDER</p><h1>{order?.restaurant_name || "Order tracking"}</h1>
     {error && <p role="alert">{error}</p>}
     {!order && !error && <p role="status">Loading your order…</p>}
@@ -71,5 +72,5 @@ export default function Tracker({ id }: { id:string }) {
         <button className="button" disabled={busy}>{busy ? "Submitting…" : "Submit review"}</button>
       </form>)}
     </>}{notice && <p role="status">{notice}</p>}
-  </section></main>;
+  </section></main></>;
 }

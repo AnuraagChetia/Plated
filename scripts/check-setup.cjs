@@ -14,20 +14,22 @@ async function main() {
   const checks = [
     [
       "restaurants",
-      "id,pickup_address,contact_phone,accepts_pickup,accepts_delivery,accepting_orders,estimated_minutes",
+      "id,pickup_address,contact_phone,accepts_pickup,accepts_delivery,accepting_orders,estimated_minutes,opens_at,closes_at,timezone",
     ],
     [
       "orders",
-      "id,customer_phone,fulfillment,client_request_id,tracking_token",
+      "id,customer_phone,fulfillment,client_request_id,tracking_token,customer_user_id",
     ],
     ["order_items", "id,unit_price,quantity"],
+    ["customer_profiles", "user_id,name,phone"],
+    ["customer_addresses", "id,user_id,label,recipient,phone,address"],
     ["reviews", "id,owner_reply"],
     ["media_assets", "id,content_base64,mime_type,menu_item_id"],
   ];
   const results = await Promise.all(
     checks.map(async ([table, columns]) => {
       const { error } = await client.from(table).select(columns).limit(0);
-      const protectedTable = table === "order_items" && error?.code === "42501";
+      const protectedTable = ["order_items","customer_profiles","customer_addresses"].includes(table) && error?.code === "42501";
       console.log(
         `${protectedTable ? "PROTECTED (expected)" : error ? "MISSING/UNREACHABLE" : "OK"}: ${table}${error && !protectedTable ? ` (${error.code || "connection error"})` : ""}`,
       );
@@ -36,7 +38,7 @@ async function main() {
   );
   if (results.some((ready) => !ready)) {
     console.error(
-      "Apply unapplied migrations in numeric order through 0004, then rerun this check. No database data was changed.",
+      "Apply unapplied migrations in numeric order through 0006, then rerun this check. No database data was changed.",
     );
     process.exitCode = 1;
   } else

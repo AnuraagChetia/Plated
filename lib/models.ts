@@ -1,6 +1,6 @@
-export type Restaurant = { id: string; name: string; slug: string; description: string; theme: string; pickup_address: string; contact_phone: string; accepts_pickup: boolean; accepts_delivery: boolean; accepting_orders: boolean; is_published: boolean; estimated_minutes: number };
+export type Restaurant = { id: string; name: string; slug: string; description: string; pickup_address: string; contact_phone: string; accepts_pickup: boolean; accepts_delivery: boolean; accepting_orders: boolean; is_published: boolean; estimated_minutes: number; opens_at?:string|null; closes_at?:string|null; timezone?:string };
 export type Order = { id: string; customer_name: string; customer_phone: string | null; delivery_address: string | null; notes: string | null; fulfillment: string | null; total: number; status: string; created_at: string; order_items: { name: string; quantity: number }[] };
-export type Dish = { id: string; name: string; description: string; price: number; category: string; is_available: boolean };
-export type Review = { id: string; customer_name: string; restaurant_rating: number; comment: string | null; owner_reply: string | null; created_at: string };
+export type Dish = { id: string; name: string; description: string; price: number; category: string; is_available: boolean; is_demo?:boolean };
+export type Review = { id: string; customer_name: string; restaurant_rating: number; comment: string | null; owner_reply: string | null; created_at: string; is_demo?:boolean };
 export type Media = { id: string; kind: string; alt_text: string | null; menu_item_id: string | null };
 export type DashboardData = { restaurant: Restaurant; orders: Order[]; orderCount: number; queue: Order[]; menu: Dish[]; reviews: Review[]; reviewCount: number; media: Media[]; summary: { orders: number; active: number; completed_value: number; reviews: number; rating: number | null } };
