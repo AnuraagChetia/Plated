@@ -195,6 +195,16 @@ The storefront shows only the newest six reviews in one horizontal carousel: thr
 
 The repository includes `render.yaml` for a free Node web service using Supabase image storage. See [deployment instructions](docs/render-deployment.md). Supply credentials only in Render environment settings.
 
+### Docker
+
+With Docker's Linux engine running and `.env.local` configured:
+
+```bash
+docker compose --env-file .env.local up --build -d
+```
+
+Open http://localhost:3001. The production image runs as a non-root user and supports Supabase storage or a persistent local uploads volume. See [Docker setup](docs/docker.md) for configuration, existing image migration, and hosting details. Rebuild when public Supabase configuration changes.
+
 ### Branch workflow
 
 - **main**: production; Render deploys this branch.
