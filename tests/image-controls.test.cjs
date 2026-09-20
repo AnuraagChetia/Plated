@@ -53,3 +53,5 @@ test('demo feedback remains labeled without preview UI or slideshow controls',()
  assert.doesNotMatch(html,/Demo storefront|Show real reviews only|Pause slideshow|Previous review|Next review/);assert.match(html,/Masor Tenga/);assert.match(html,/Demo review/);assert.match(html,/Preview only/);
  assert.doesNotMatch(html,/Verified order|Add Masor Tenga to cart/);
 });
+
+test('review cards display a stable calendar date',()=>{const ReviewCarousel=load('app/components/ReviewCarousel.tsx').default;const html=renderToStaticMarkup(React.createElement(ReviewCarousel,{reviews:[{id:'dated',customer_name:'Guest',restaurant_rating:5,created_at:'2026-09-18T00:00:00Z'}]}));assert.match(html,/<time[^>]+dateTime="2026-09-18T00:00:00Z"/);assert.match(html,/18 Sept 2026|18 Sep 2026/);});

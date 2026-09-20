@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Dish, Restaurant, Review } from "../../lib/models";
+import { Dish, Restaurant } from "../../lib/models";
 import { ImageField, ImageChange, saveImage } from "../components/image-field";
 import { storefrontSlug } from "../../lib/restaurant-validation";
 import { responseJson } from "../../lib/api-client";
@@ -34,14 +34,6 @@ export function MenuEditor({ dish, restaurantId, imageUrl, categories, onCancel,
     </fieldset>
     {error && <p role="alert">{error}</p>}
     <div className="formActions"><button className="button" disabled={busy}>{busy ? "Saving…" : "Save dish"}</button><button className="outline" type="button" disabled={busy} onClick={onCancel}>Cancel</button></div>
-  </form>;
-}
-
-export function ReviewReply({ review,busy,onSave }: { review:Review;busy:boolean;onSave:(reply:string)=>Promise<void> }) {
-  const [reply,setReply] = useState(review.owner_reply || "");
-  return <form className="replyForm" onSubmit={async event => { event.preventDefault(); try { await onSave(reply); } catch {} }}>
-    <label>Your public reply<textarea maxLength={1000} value={reply} onChange={event => { setReply(event.target.value); }} /></label>
-    <button className="outline" disabled={busy}>Save reply</button>
   </form>;
 }
 

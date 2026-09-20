@@ -49,3 +49,5 @@ test('contextual removal clears old associations first so previous images cannot
   assert.deepEqual(f.calls.filter(c=>c.action==='delete').map(c=>c.filters.find(([key])=>key==='id')[1]),['old','new']);
   assert.deepEqual(f.deleted,['local/new.png']);
 });
+
+test('logo and cover replacements delete all previous bucket objects after saving',async()=>{for(const kind of ['logo','cover']){const f=fixture({assets:[{id:'current',storage_path:'supabase/current.png'},{id:'older',storage_path:'supabase/older.png'}]});assert.equal((await f.routes.POST(f.request('POST',kind))).status,200);assert.deepEqual(f.deleted,['supabase/current.png','supabase/older.png']);assert.equal(f.calls.find(c=>c.action==='update').values.menu_item_id,null);}});

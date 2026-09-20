@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: plated
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npx --yes pnpm@10.2.1 install --frozen-lockfile && npm run build
+    startCommand: npm run start -- --hostname 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: STORAGE_PROVIDER
+        value: supabase
+      - key: SUPABASE_STORAGE_BUCKET
+        value: restaurant-images
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

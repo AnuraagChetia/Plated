@@ -15,7 +15,7 @@ import { readStored, removeStored, writeStored } from "../../../lib/browser-stor
 import { ApiError, responseJson } from "../../../lib/api-client";
 
 type Receipt = { id:string;token:string };
-export default function Storefront({ restaurant,menu,media,reviews,isOwner = false }: { isOwner?:boolean;restaurant:Restaurant;menu:Dish[];media:Media[];reviews:Review[] }) {
+export default function Storefront({ restaurant,menu,media:initialMedia,reviews,isOwner = false }: { isOwner?:boolean;restaurant:Restaurant;menu:Dish[];media:Media[];reviews:Review[] }) {
   const router = useRouter();
   const [account,setAccount]=useState<CustomerAccount|null>(null);
   const [selectedAddress,setSelectedAddress]=useState("");
@@ -38,7 +38,12 @@ export default function Storefront({ restaurant,menu,media,reviews,isOwner = fal
     return () => { dialog.close(); document.body.style.overflow = previousOverflow; cartButton.current?.focus(); };
   }, [cartOpen]);
   const [imageRevision,setImageRevision] = useState(0);
-  function refreshImages() { setImageRevision(value => value + 1); router.refresh(); }
+  const [media,setMedia]=useState(initialMedia);
+  useEffect(()=>setMedia(initialMedia),[initialMedia]);
+  function refreshImages(kind:"logo"|"cover",saved:Media|null) {
+    setMedia(current=>[...(saved?[saved]:[]),...current.filter(asset=>asset.kind!==kind)]);
+    setImageRevision(value => value + 1); router.refresh();
+  }
   const [cart,setCart] = useState<Record<string,number>>({});
   const [customerName,setCustomerName] = useState("");
   const pickup = serviceOptions.accepts_pickup && !!restaurant.pickup_address.trim();
@@ -114,12 +119,12 @@ export default function Storefront({ restaurant,menu,media,reviews,isOwner = fal
   return <main className="publicStore">
     {confirmationOpen&&receipt&&<OrderConfirmation receipt={receipt} note={confirmationNote} onClose={()=>setConfirmationOpen(false)}/>}
     <div className="storeContactBar"><span>{restaurant.pickup_address || "Order directly from our kitchen"}</span><div>{restaurant.contact_phone && <a href={`tel:${restaurant.contact_phone}`}>{restaurant.contact_phone}</a>}{isOwner && <a href="/dashboard">Owner dashboard ↗</a>}</div></div>
-    <RestaurantNavigation name={restaurant.name} slug={restaurant.slug} logo={<div className="storeLogoArea">{isOwner ? <StorefrontImageEditor restaurantId={restaurant.id} kind="logo" current={logo ? `/api/media/${logo.id}?v=${imageRevision}` : undefined} onSaved={refreshImages}>{logo ? <img className="storeLogo" src={`/api/media/${logo.id}?v=${imageRevision}`} alt={restaurant.name} /> : <span className="logoPlaceholder" aria-label="Restaurant logo">{restaurant.name.slice(0,2).toUpperCase()}</span>}</StorefrontImageEditor> : logo ? <img className="storeLogo" src={`/api/media/${logo.id}?v=${imageRevision}`} alt={restaurant.name} /> : <span className="logoPlaceholder" aria-label="Restaurant logo">{restaurant.name.slice(0,2).toUpperCase()}</span>}</div>}><button ref={cartButton} type="button" className="cartToggle" aria-label={`Open cart, ${count} items`} aria-haspopup="dialog" aria-expanded={cartOpen} aria-controls="store-cart" onClick={() => setCartOpen(true)}>
+    <RestaurantNavigation name={restaurant.name} slug={restaurant.slug} logo={<div className="storeLogoArea">{isOwner ? <StorefrontImageEditor restaurantId={restaurant.id} kind="logo" current={logo ? `/api/media/${logo.id}?v=${imageRevision}` : undefined} onSaved={saved=>refreshImages("logo",saved)}>{logo ? <img className="storeLogo" src={`/api/media/${logo.id}?v=${imageRevision}`} alt={restaurant.name} /> : <span className="logoPlaceholder" aria-label="Restaurant logo">{restaurant.name.slice(0,2).toUpperCase()}</span>}</StorefrontImageEditor> : logo ? <img className="storeLogo" src={`/api/media/${logo.id}?v=${imageRevision}`} alt={restaurant.name} /> : <span className="logoPlaceholder" aria-label="Restaurant logo">{restaurant.name.slice(0,2).toUpperCase()}</span>}</div>}><button ref={cartButton} type="button" className="cartToggle" aria-label={`Open cart, ${count} items`} aria-haspopup="dialog" aria-expanded={cartOpen} aria-controls="store-cart" onClick={() => setCartOpen(true)}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3h2l2.5 12h11l2-8H6" /><circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" /></svg><span className="cartBadge" aria-hidden="true">{count}</span>
     </button></RestaurantNavigation>
     {receipt&&<div className="latestOrder"><button type="button" onClick={()=>{setConfirmationNote("");setConfirmationOpen(true);}} aria-label="Track your latest order" title="Track your latest order"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span aria-hidden="true">Track</span></button></div>}
     {!availability.open&&<div className="storeClosedNotice" role="status"><span className="closedNoticeIcon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></span><div><strong>{availability.message.includes("closed")?"Kitchen is closed":"Ordering is paused"}</strong><p>{availability.message}</p></div></div>}
-    <section className="storeHero"><div className={`storeCoverArea ${!cover ? "emptyCover" : ""}`}>{cover && <img className="storeCover" src={`/api/media/${cover.id}?v=${imageRevision}`} alt={cover.alt_text || restaurant.name} />}{isOwner && <StorefrontImageEditor restaurantId={restaurant.id} kind="cover" current={cover ? `/api/media/${cover.id}?v=${imageRevision}` : undefined} onSaved={refreshImages} />}</div></section>
+    <section className="storeHero"><div className={`storeCoverArea ${!cover ? "emptyCover" : ""}`}>{cover && <img className="storeCover" src={`/api/media/${cover.id}?v=${imageRevision}`} alt={cover.alt_text || restaurant.name} />}{isOwner && <StorefrontImageEditor restaurantId={restaurant.id} kind="cover" current={cover ? `/api/media/${cover.id}?v=${imageRevision}` : undefined} onSaved={saved=>refreshImages("cover",saved)} />}</div></section>
     <section id="about" className="storeDetails">
       <p className="scriptHeading">Welcome to our table</p><h1>{restaurant.name}</h1><div className="sectionOrnament" aria-hidden="true"><span />✧<span /></div><p className="restaurantStory">{restaurant.description}</p>
       <div className="serviceDetails"><span><i aria-hidden="true">◷</i>{canOrder ? `Prepared in about ${restaurant.estimated_minutes} minutes` : availability.message}</span><span><i aria-hidden="true">⌖</i>{restaurant.pickup_address || "Contact us for collection details"}</span></div>

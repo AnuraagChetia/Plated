@@ -1,6 +1,6 @@
 # Plated
 
-Plated is a direct-ordering application for independent restaurants. Owners publish a storefront, manage their menu and orders, upload images, and reply to diner reviews.
+Plated is a direct-ordering application for independent restaurants. Owners publish a storefront, manage their menu and orders, upload images, and read diner reviews.
 
 ## Implemented flows
 
@@ -84,7 +84,7 @@ The application uses the publishable key and user sessions; no service-role key 
 - A pending checkout is retained in browser storage and locked against edits until it is confirmed or definitively rejected.
 - The order-tracking secret stays in the URL fragment and is sent in a POST body. Anyone holding the private link can view its receipt and submit its one review; keep it private.
 - Reviews require a completed order and its tracking token. Owners can change their replies, not diner ratings.
-- Image uploads accept PNG, JPEG, or WebP, up to 2 MB each and 30 per restaurant. New files are stored on the application server in `data/uploads` (or `UPLOAD_DIR`); Supabase stores associations and metadata. Existing database-backed images remain readable and are converted to local storage when replaced.
+- Image uploads accept PNG, JPEG, or WebP, up to 3 MB each and 30 per restaurant. New files use local disk by default, or a private Supabase Storage bucket with `STORAGE_PROVIDER=supabase`; Supabase stores associations and metadata. Existing database-backed images remain readable and are converted to local storage when replaced.
 - Menu images are edited in the dish form. Cover photos and logos are edited on the owner’s storefront. There is no central Media Library. Saving dish details and its image uses two requests; if the image fails, the form retains the saved dish ID so retrying does not create another dish.
 - API errors return JSON, and the browser handles empty/HTML responses without exposing JSON parser exceptions.
 - `proxy.ts` refreshes sessions for pages. API handlers refresh and validate their own sessions without consuming the incoming request body.
@@ -107,7 +107,7 @@ The application uses the publishable key and user sessions; no service-role key 
 | `/api/menu` | POST, PATCH | Add/edit dishes, categories, descriptions, and availability |
 | `/api/orders` | POST, PATCH | Submit checkout or advance/cancel an order |
 | `/api/orders/track` | POST | Read a receipt using its private token |
-| `/api/reviews` | POST, PATCH | Submit a diner review or save an owner reply |
+| `/api/reviews` | POST | Submit a diner review |
 | `/api/media?restaurant=…&kind=logo|cover|menu_item&dish=…` | POST, DELETE | Replace/remove an image at its feature location; dish required for menu images |
 | `/api/media/[id]` | GET | Read an image subject to restaurant visibility |
 | `/api/auth/sign-up`, `/api/auth/sign-in`, `/api/auth/sign-out` | POST | Auth handlers |
@@ -153,7 +153,7 @@ Tests run without live Supabase credentials. They cover the launch request-body 
 
 For database-level verification against an existing Supabase project, run [smoke-test.sql](supabase/smoke-test.sql) in SQL Editor as the database administrator. It requires an account without a restaurant and verifies launch, checkout, retries, private tracking, order statuses, and review replies. All sample records are rolled back. This check passed against the connected project after migrations 0002–0004 were applied.
 
-After configuring the database, verify the full flow: launch a restaurant, edit its menu, upload an image, place an order, track it, advance it to completion, submit a review, and reply from the dashboard. Check both desktop and narrow layouts.
+After configuring the database, verify the full flow: launch a restaurant, edit its menu, upload an image, place an order, track it, advance it to completion, submit a review, and read it in the dashboard. Check both desktop and narrow layouts.
 
 ## Troubleshooting
 
@@ -167,9 +167,9 @@ After configuring the database, verify the full flow: launch a restaurant, edit 
 
 Dashboard lists use 20 orders or 10 reviews per page, with aggregate metrics across the restaurant. Automatic refresh polls every ten seconds while the page is visible; it does not require a separate real-time service. Media supports images rather than video. The contact quota is a basic abuse limit, not phone verification or a substitute for deployment-level traffic protection. Delivery fees, taxes, payment reconciliation, and third-party dispatch are not calculated by this app.
 
-### Local image storage
+### Image storage
 
-Keep `UPLOAD_DIR` on a persistent writable volume and back it up alongside the database. Files are served through `/api/media/[id]` after database visibility checks, not from a public uploads directory. Local uploads require a persistent application server; deployments with multiple instances must share the same volume. `StorageService` separates validation, upload, read, deletion, and URL generation so an S3 adapter can replace the local implementation later. S3 is not implemented.
+Keep `UPLOAD_DIR` on a persistent writable volume and back it up alongside the database. Files are served through `/api/media/[id]` after database visibility checks, not from a public uploads directory. For free hosting without persistent disks, use the [Supabase Storage setup](docs/image-storage.md). Local uploads require a persistent application server; deployments with multiple instances must share the same volume. `StorageService` separates validation, upload, read, deletion, and URL generation so an S3 adapter can replace the local implementation later. S3 is not implemented.
 
 ### Owner shortcuts
 
@@ -190,3 +190,7 @@ Storefront sign-in uses customer-facing copy and preserves restaurant context th
 KhaoKa’s six sample dishes have been added as real available menu items at their preview prices. `scripts/seed-khaoka-menu.sql` adds them without duplicating or overwriting existing names. `/r/khaoka` fills empty review-carousel positions with clearly labeled fictional feedback; real reviews take priority. KhaoKa is the dedicated demo restaurant, with no separate preview mode. Category illustrations fill missing menu photos. See [the client walkthrough](docs/khaoka-demo.md) for a presentation checklist.
 
 The storefront shows only the newest six reviews in one horizontal carousel: three cards on desktop, two on tablet, and one on mobile. It advances every five seconds, pauses on hover/focus, offers previous/next and pause controls, and respects reduced-motion preferences.
+
+### Free hosting on Render
+
+The repository includes `render.yaml` for a free Node web service using Supabase image storage. See [deployment instructions](docs/render-deployment.md). Supply credentials only in Render environment settings.

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DashboardData, Dish, Order } from "../../lib/models";
 import { money, nextStatus } from "../../lib/orders";
 import { responseJson } from "../../lib/api-client";
-import { MenuEditor, ReviewReply, Settings } from "./editors";
+import { MenuEditor, Settings } from "./editors";
 
 const tabs = ["Overview", "Orders", "Menu", "Reviews", "Settings"];
 export default function Dashboard({ ownerName }: { ownerName: string }) {
@@ -463,14 +463,6 @@ export default function Dashboard({ ownerName }: { ownerName: string }) {
                   <b>{review.customer_name}</b> ·{" "}
                   {new Date(review.created_at).toLocaleDateString("en-IN")}
                 </p>
-                <ReviewReply
-                  key={review.id + (review.owner_reply || "")}
-                  review={review}
-                  busy={busy}
-                  onSave={(reply) =>
-                    save("/api/reviews", "PATCH", { id: review.id, reply })
-                  }
-                />
               </article>
             ))}
             {!data.reviews.length && (

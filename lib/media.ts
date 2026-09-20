@@ -1,4 +1,4 @@
-export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 export function imageType(bytes: Uint8Array): string | null {
   if (bytes.length < 12 || bytes.length > MAX_IMAGE_BYTES) return null;
   if ([137,80,78,71,13,10,26,10].every((value,index) => bytes[index] === value)) return "image/png";

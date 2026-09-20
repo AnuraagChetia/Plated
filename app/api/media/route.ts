@@ -24,9 +24,13 @@ async function change(request: Request, remove: boolean) {
   const { data: existing, error: lookupError } = await query.order("created_at", { ascending: false });
   if (lookupError) return json({ error: "Could not load the current image." }, 503);
   const assets = existing || [];
+  let cleanupFailed = false;
   async function cleanFiles(rows: typeof assets) {
     for (const row of rows) if (row.storage_path !== "database") {
-      try { await storage.delete(row.storage_path); } catch { console.error("Could not clean up an old image file."); }
+      for (let attempt=0; attempt<3; attempt++) {
+        try { await storage.delete(row.storage_path); break; }
+        catch { if(attempt===2){cleanupFailed=true;console.error("Could not clean up an old image file.");} }
+      }
     }
   }
   if (remove) {
@@ -36,11 +40,11 @@ async function change(request: Request, remove: boolean) {
       if (error || !data) return json({ error: "The image changed. Refresh and try again." }, 409);
       await cleanFiles([asset]);
     }
-    return json({ media: null });
+    return json({ media: null, ...(cleanupFailed ? {warning:"Image removed from the storefront, but its stored file could not be deleted. Please retry storage cleanup."} : {}) });
   }
   const bytes = await readBytes(request, MAX_IMAGE_BYTES);
   try { if (!bytes) throw new Error(); storage.validate(bytes); }
-  catch { return json({ error: "Upload a PNG, JPEG, or WebP image no larger than 2 MB." }, 400); }
+  catch { return json({ error: "Upload a PNG, JPEG, or WebP image no larger than 3 MB." }, 400); }
   const uploaded = await storage.upload(bytes!);
   const values = { restaurant_id: restaurantId, kind, menu_item_id: kind === "menu_item" ? dishId : null,
     storage_path: uploaded.key, mime_type: uploaded.mime, content_base64: null, alt_text: "" };
@@ -53,7 +57,13 @@ async function change(request: Request, remove: boolean) {
     return json({ error: "Could not save the image. Refresh and retry; the restaurant supports up to 30 images." }, 409);
   }
   await cleanFiles(assets.slice(0, 1));
-  return json({ media: data, url: storage.url(data.id) });
+  // Remove historical duplicates so their files cannot accumulate or reappear.
+  for(const asset of assets.slice(1)){
+    const {data:removed,error:removeError}=await client.from("media_assets").delete().eq("id",asset.id).eq("storage_path",asset.storage_path).select("id").maybeSingle();
+    if(removeError){cleanupFailed=true;continue;}
+    if(removed)await cleanFiles([asset]);
+  }
+  return json({ media: data, url: storage.url(data.id), ...(cleanupFailed ? {warning:"Image saved, but an older image could not be removed from storage. Please contact the restaurant administrator."} : {}) });
 }
 export const POST = withApi((request: Request) => change(request, false));
 export const DELETE = withApi((request: Request) => change(request, true));
