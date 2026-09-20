@@ -194,3 +194,10 @@ The storefront shows only the newest six reviews in one horizontal carousel: thr
 ### Free hosting on Render
 
 The repository includes `render.yaml` for a free Node web service using Supabase image storage. See [deployment instructions](docs/render-deployment.md). Supply credentials only in Render environment settings.
+
+### Branch workflow
+
+- **main**: production; Render deploys this branch.
+- **dev**: all future development and testing.
+- Release by reviewing and merging dev into main, then deploying main on Render. Pushing dev does not update production.
+- Git branches share configured external services. Use a separate Supabase development project before testing database or storage mutations.
