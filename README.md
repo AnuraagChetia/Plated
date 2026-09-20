@@ -84,7 +84,7 @@ The application uses the publishable key and user sessions; no service-role key 
 - A pending checkout is retained in browser storage and locked against edits until it is confirmed or definitively rejected.
 - The order-tracking secret stays in the URL fragment and is sent in a POST body. Anyone holding the private link can view its receipt and submit its one review; keep it private.
 - Reviews require a completed order and its tracking token. Owners can change their replies, not diner ratings.
-- Image uploads accept PNG, JPEG, or WebP, up to 3 MB each and 30 per restaurant. New files use local disk by default, or a private Supabase Storage bucket with `STORAGE_PROVIDER=supabase`; Supabase stores associations and metadata. Existing database-backed images remain readable and are converted to local storage when replaced.
+- Image uploads accept PNG, JPEG, or WebP, up to 3 MB each and 30 per restaurant. New files use local disk by default, or a private Supabase Storage bucket with `STORAGE_PROVIDER=supabase`; Supabase stores associations and metadata. Existing database-backed images remain readable and move to the configured storage provider when replaced.
 - Menu images are edited in the dish form. Cover photos and logos are edited on the owner’s storefront. There is no central Media Library. Saving dish details and its image uses two requests; if the image fails, the form retains the saved dish ID so retrying does not create another dish.
 - API errors return JSON, and the browser handles empty/HTML responses without exposing JSON parser exceptions.
 - `proxy.ts` refreshes sessions for pages. API handlers refresh and validate their own sessions without consuming the incoming request body.
@@ -189,7 +189,7 @@ Storefront sign-in uses customer-facing copy and preserves restaurant context th
 
 KhaoKa’s six sample dishes have been added as real available menu items at their preview prices. `scripts/seed-khaoka-menu.sql` adds them without duplicating or overwriting existing names. `/r/khaoka` fills empty review-carousel positions with clearly labeled fictional feedback; real reviews take priority. KhaoKa is the dedicated demo restaurant, with no separate preview mode. Category illustrations fill missing menu photos. See [the client walkthrough](docs/khaoka-demo.md) for a presentation checklist.
 
-The storefront shows only the newest six reviews in one horizontal carousel: three cards on desktop, two on tablet, and one on mobile. It advances every five seconds, pauses on hover/focus, offers previous/next and pause controls, and respects reduced-motion preferences.
+The storefront shows only the newest six reviews in one horizontal carousel: three cards on desktop, two on tablet, and one on mobile. It advances every five seconds, pauses on hover/focus, supports manual swiping or scrolling, and respects reduced-motion preferences. There are no arrow or pause buttons. Reviewer names, verification labels, and dates share an aligned footer.
 
 ### Free hosting on Render
 
@@ -201,3 +201,5 @@ The repository includes `render.yaml` for a free Node web service using Supabase
 - **dev**: all future development and testing.
 - Release by reviewing and merging dev into main, then deploying main on Render. Pushing dev does not update production.
 - Git branches share configured external services. Use a separate Supabase development project before testing database or storage mutations.
+
+Storefront pages use the restaurant name and description for the browser title and social link previews, with the cover image (or logo fallback) and restaurant logo tab icon. The live demo is https://plated-6gcq.onrender.com/r/khaoka.
