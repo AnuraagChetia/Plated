@@ -1,0 +1,17 @@
+.git
+.next
+node_modules
+.pnpm-store
+.env*
+!.env.example
+data
+*.db
+*.db-*
+*.log
+out
+coverage
+test-results
+playwright-report
+.vscode
+.DS_Store
+Thumbs.db
